@@ -15,6 +15,8 @@ Set these in your `.env` file or as system/Docker environment variables.
 |----------|------|---------|-------------|
 | `HOST` | string | `0.0.0.0` | Server bind address |
 | `PORT` | integer | `8080` | Server port. Docker default is `8085`. |
+| `PYTHONUNBUFFERED` | boolean | `1` | Flush Python logs immediately in containers. |
+| `PYTHONDONTWRITEBYTECODE` | boolean | `1` | Prevent `.pyc` files from being written in containers. |
 | `DATA_DIR` | string | `data` | Directory for database, encryption keys, and temp files |
 | `DOWNLOAD_DIR` | string | *(empty)* | Directory for proxied video downloads. If empty, uses a default location. |
 | `CREDENTIALS_ENCRYPTION_KEY` | string | *(auto-generated)* | Fernet encryption key for site credentials. Auto-generated on first run if not set. Generate with: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |

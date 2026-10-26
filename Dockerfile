@@ -4,7 +4,7 @@ ARG POT_PROVIDER=bundled
 # Build the bgutil POT provider server (needs node >= 22; final image ships the
 # node binary from this stage). Version must match the pip plugin pin in
 # requirements.txt (bgutil-ytdlp-pot-provider).
-FROM node:22-bookworm-slim AS pot-builder
+FROM node:24-bookworm-slim AS pot-builder
 ARG POT_PROVIDER_VERSION=1.3.2
 ADD https://github.com/Brainicism/bgutil-ytdlp-pot-provider/archive/refs/tags/${POT_PROVIDER_VERSION}.tar.gz /tmp/pot.tar.gz
 RUN mkdir -p /build \
@@ -18,16 +18,16 @@ RUN mkdir -p /build \
     && cp -r build node_modules package.json /opt/bgutil-pot-provider/ \
     && cp /usr/local/bin/node /opt/bgutil-pot-provider/bin/node
 
-FROM python:3.12-slim AS pot-stage-bundled
+FROM python:3.14-slim AS pot-stage-bundled
 COPY --from=pot-builder /opt/bgutil-pot-provider /opt/bgutil-pot-provider
 
-FROM python:3.12-slim AS pot-stage-none
+FROM python:3.14-slim AS pot-stage-none
 # Empty placeholder so the final COPY succeeds without the bundle
 RUN mkdir -p /opt/bgutil-pot-provider
 
 FROM pot-stage-${POT_PROVIDER} AS pot-final
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
