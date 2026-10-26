@@ -638,6 +638,11 @@ class TestExtractVideo:
         response = self.client.get("/api/v1/extract")
         assert response.status_code == 422  # FastAPI validation error
 
+    def test_extract_video_rejects_invalid_proxy_mode(self):
+        """Only the supported stream delivery modes may override the default."""
+        response = self.client.get("/api/v1/extract?url=https://example.com/video&proxy_mode=off")
+        assert response.status_code == 422
+
 
 # =============================================================================
 # Tests for GET /api/v1/extract/channel

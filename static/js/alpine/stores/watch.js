@@ -65,12 +65,13 @@ document.addEventListener('alpine:init', () => {
             this.loading = true;
             this.error = null;
             this.videoData = null;
+            document.getElementById('watch-content')?.setAttribute('hidden', '');
             this.loadingStep = 'Connecting to server...';
 
             try {
                 this.loadingStep = 'Extracting video information...';
 
-                const response = await fetch(`/api/v1/extract?url=${encodeURIComponent(url)}`, {
+                const response = await fetch(`/api/v1/extract?url=${encodeURIComponent(url)}&proxy_mode=relay`, {
                     credentials: 'same-origin'
                 });
 
@@ -87,6 +88,8 @@ document.addEventListener('alpine:init', () => {
 
                 this.loadingStep = 'Loading player...';
                 this.videoData = data;
+                document.getElementById('watch-content')?.removeAttribute('hidden');
+                window.dispatchEvent(new CustomEvent('watch:video-loaded', { detail: data }));
 
                 // Update URL for shareable link (without triggering reload)
                 const newUrl = new URL(window.location);

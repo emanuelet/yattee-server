@@ -380,7 +380,13 @@ def _enrich_with_innertube_next(response: VideoResponse, it_video: dict) -> None
 
 @router.get("/extract", response_model=VideoResponse)
 async def extract_video_url(
-    request: Request, url: str = Query(..., description="URL to extract video from (any site yt-dlp supports)")
+    request: Request,
+    url: str = Query(..., description="URL to extract video from (any site yt-dlp supports)"),
+    proxy_mode: Optional[str] = Query(
+        None,
+        description="Override extracted stream delivery: 'relay' proxies stream bytes, 'download' caches them on disk.",
+        pattern="^(relay|download)$",
+    ),
 ):
     """Extract video details from any URL that yt-dlp supports.
 
@@ -421,10 +427,12 @@ async def extract_video_url(
 
         site_config = database.get_site_by_extractor(extractor)
         proxy_streams = site_config.get("proxy_streaming", True) if site_config else True
+        if proxy_mode == "relay":
+            proxy_streams = True
         # `extract_url` is the share-extension / external-URL flow; downloads
         # of arbitrary sites benefit from the on-disk caching of /proxy/fast/,
         # so default to "download" mode here rather than "relay".
-        ext_proxy_mode = "download" if proxy_streams else "off"
+        ext_proxy_mode = proxy_mode or ("download" if proxy_streams else "off")
 
         response = ytdlp_to_video_response(
             info, base_url, proxy_streams=proxy_streams, proxy_mode=ext_proxy_mode,

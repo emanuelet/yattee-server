@@ -131,7 +131,7 @@
         </div>
 
         <!-- Video Player & Info -->
-        <div x-show="$store.watch.videoData && !$store.watch.loading" x-cloak>
+        <div id="watch-content" hidden>
             <!-- Player -->
             <div class="bg-black rounded-lg overflow-hidden mb-5" x-data="videoPlayer">
                 <video-player class="video-container">

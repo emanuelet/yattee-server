@@ -9,31 +9,14 @@ document.addEventListener('alpine:init', () => {
         pipSupported: false,
         currentSource: null,
         _keyboardHandler: null,
+        _videoDataHandler: null,
 
         init() {
             this.pipSupported = 'pictureInPictureEnabled' in document;
             this._currentVideoId = null;
 
-            // Watch for video data changes
-            this.$watch('$store.watch.videoData', (data) => {
-                if (data) {
-                    // Check if this is the same video (prevent double-loading)
-                    const videoId = data.videoId || data.id || data.title;
-                    if (this._currentVideoId === videoId && this.player) {
-                        return;
-                    }
-                    this._currentVideoId = videoId;
-
-                    this.$nextTick(() => {
-                        // Wait for next paint to ensure element is visible
-                        requestAnimationFrame(() => {
-                            requestAnimationFrame(() => {
-                                this.initPlayer(data);
-                            });
-                        });
-                    });
-                }
-            });
+            this._videoDataHandler = (event) => this.initPlayer(event.detail);
+            window.addEventListener('watch:video-loaded', this._videoDataHandler);
 
             // Keyboard shortcuts - bind handler for cleanup
             this._keyboardHandler = (e) => this.handleKeyboard(e);
@@ -44,12 +27,22 @@ document.addEventListener('alpine:init', () => {
             if (this._keyboardHandler) {
                 document.removeEventListener('keydown', this._keyboardHandler);
             }
+            if (this._videoDataHandler) {
+                window.removeEventListener('watch:video-loaded', this._videoDataHandler);
+            }
             if (this.player) {
                 this.player = null;
             }
         },
 
         initPlayer(data) {
+            // Check if this is the same video (prevent double-loading).
+            const videoId = data.videoId || data.id || data.title;
+            if (this._currentVideoId === videoId && this.player) {
+                return;
+            }
+            this._currentVideoId = videoId;
+
             // The v10 web component owns the controls; retain the media element for source changes.
             if (this.player) {
                 this.player = null;
@@ -57,13 +50,6 @@ document.addEventListener('alpine:init', () => {
 
             const videoEl = this.$refs.videoElement;
             if (!videoEl) {
-                return;
-            }
-
-            // Check if element is visible in DOM (not hidden by x-show)
-            if (!videoEl.offsetParent) {
-                // Element not visible yet, retry on next frame
-                requestAnimationFrame(() => this.initPlayer(data));
                 return;
             }
 
