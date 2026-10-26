@@ -6,8 +6,6 @@ fs.mkdirSync(vendorDir, { recursive: true });
 
 const files = [
   ["node_modules/alpinejs/dist/cdn.min.js", "static/vendor/alpine.min.js"],
-  ["node_modules/video.js/dist/video.min.js", "static/vendor/video.min.js"],
-  ["node_modules/video.js/dist/video-js.css", "static/vendor/video-js.css"],
 ];
 
 for (const [src, dest] of files) {
@@ -16,3 +14,10 @@ for (const [src, dest] of files) {
   fs.copyFileSync(srcPath, destPath);
   console.log(`Copied ${src} -> ${dest}`);
 }
+
+fs.cpSync(
+  path.join(__dirname, "..", "node_modules", "@videojs", "cdn"),
+  path.join(vendorDir, "videojs"),
+  { recursive: true },
+);
+console.log("Copied @videojs/cdn -> static/vendor/videojs");

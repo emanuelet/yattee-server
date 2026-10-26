@@ -4,11 +4,11 @@
     "postinstall": "node scripts/copy-vendor.js"
   },
   "dependencies": {
-    "alpinejs": "3.14.3",
-    "video.js": "8.10.0"
+    "@videojs/cdn": "10.2.0",
+    "alpinejs": "3.17.5"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.1.18",
-    "tailwindcss": "^4.1.18"
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
   }
 }

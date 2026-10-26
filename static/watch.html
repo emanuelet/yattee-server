@@ -5,51 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch - Yattee Server</title>
     <link rel="stylesheet" href="/static/css/style.css">
-    <link href="/static/vendor/video-js.css" rel="stylesheet">
+    <script type="module" src="/static/vendor/videojs/video.js"></script>
+    <script type="module" src="/static/vendor/videojs/media/hlsjs-video.js"></script>
     <script>if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
     <style>
-        /* Video.js customizations for dark theme */
-        .video-js {
-            font-family: inherit;
-        }
-        .video-js .vjs-control-bar {
-            background: rgba(0, 0, 0, 0.7);
-        }
-        .video-js .vjs-big-play-button {
-            background-color: rgba(115, 103, 240, 0.9);
-            border: none;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            line-height: 80px;
-            top: 50%;
-            left: 50%;
-            margin-top: -40px;
-            margin-left: -40px;
-        }
-        .video-js .vjs-big-play-button:hover {
-            background-color: rgb(115, 103, 240);
-        }
-        .video-js .vjs-slider {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        .video-js .vjs-load-progress {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .video-js .vjs-play-progress {
-            background: rgb(115, 103, 240);
-        }
-        .video-js .vjs-volume-level {
-            background: rgb(115, 103, 240);
-        }
-        /* Quality menu */
-        .vjs-menu-button-popup .vjs-menu {
-            background: rgba(30, 30, 30, 0.95);
-            border-radius: 4px;
-        }
-        .vjs-menu li.vjs-selected {
-            background: rgb(115, 103, 240);
-        }
         /* Description gradient */
         .description-gradient {
             position: relative;
@@ -80,12 +39,9 @@
             background-position: right 8px center;
             padding-right: 28px;
         }
-        /* Video container - let Video.js handle aspect ratio */
+        /* Video.js v10 owns the player controls inside its web components. */
         .video-container {
             position: relative;
-            width: 100%;
-        }
-        .video-container .video-js {
             width: 100%;
         }
     </style>
@@ -178,12 +134,11 @@
         <div x-show="$store.watch.videoData && !$store.watch.loading" x-cloak>
             <!-- Player -->
             <div class="bg-black rounded-lg overflow-hidden mb-5" x-data="videoPlayer">
-                <div class="video-container">
-                    <video x-ref="videoElement"
-                           class="video-js vjs-default-skin vjs-big-play-centered"
-                           playsinline>
-                    </video>
-                </div>
+                <video-player class="video-container">
+                    <video-skin style="display: block; width: 100%; aspect-ratio: 16 / 9;">
+                        <hlsjs-video x-ref="videoElement" playsinline></hlsjs-video>
+                    </video-skin>
+                </video-player>
 
                 <!-- Player Controls Bar -->
                 <div class="bg-card border-t border-border px-4 py-3 flex flex-wrap gap-4 items-center justify-between">
@@ -355,8 +310,6 @@
     <script src="/static/js/alpine/components/watch/player.js"></script>
     <script src="/static/js/alpine/components/watch/videoInfo.js"></script>
     <script src="/static/js/alpine/components/watch/downloads.js"></script>
-    <!-- Video.js -->
-    <script src="/static/vendor/video.min.js"></script>
     <!-- Alpine.js -->
     <script defer src="/static/vendor/alpine.min.js"></script>
     <script>

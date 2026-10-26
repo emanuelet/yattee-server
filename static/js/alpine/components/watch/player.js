@@ -45,15 +45,13 @@ document.addEventListener('alpine:init', () => {
                 document.removeEventListener('keydown', this._keyboardHandler);
             }
             if (this.player) {
-                this.player.dispose();
                 this.player = null;
             }
         },
 
         initPlayer(data) {
-            // Dispose existing player
+            // The v10 web component owns the controls; retain the media element for source changes.
             if (this.player) {
-                this.player.dispose();
                 this.player = null;
             }
 
@@ -72,36 +70,22 @@ document.addEventListener('alpine:init', () => {
             // Parse available formats
             this.parseFormats(data);
 
-            // Initialize Video.js
-            this.player = videojs(videoEl, {
-                controls: true,
-                autoplay: false,
-                preload: 'metadata',
-                aspectRatio: '16:9',
-                playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
-                html5: {
-                    vhs: {
-                        overrideNative: true
-                    },
-                    nativeAudioTracks: false,
-                    nativeVideoTracks: false
-                }
-            });
-
-            // Set initial source
-            this.setSource(data);
+            this.player = videoEl;
 
             // Handle errors
-            this.player.on('error', () => {
-                const error = this.player.error();
+            this.player.addEventListener('error', () => {
+                const error = this.player.error;
                 console.error('[Player] Video playback error:', error);
             });
 
-            this.player.on('ready', () => {
+            this.player.addEventListener('canplay', () => {
                 if (Alpine.store('watch').autoplay) {
-                    this.player.play();
+                    this.player.play().catch(() => {});
                 }
-            });
+            }, { once: true });
+
+            // Set initial source after player event handlers are registered.
+            this.setSource(data);
         },
 
         parseFormats(data) {
@@ -287,7 +271,8 @@ document.addEventListener('alpine:init', () => {
 
             if (source) {
                 this.currentSource = source;
-                this.player.src(source);
+                this.player.src = source.src;
+                this.player.load();
 
                 // Set poster
                 if (data.videoThumbnails && data.videoThumbnails.length > 0) {
@@ -295,7 +280,7 @@ document.addEventListener('alpine:init', () => {
                                    data.videoThumbnails.find(t => t.quality === 'high') ||
                                    data.videoThumbnails[0];
                     if (poster) {
-                        this.player.poster(poster.url);
+                        this.player.poster = poster.url;
                     }
                 }
             }
@@ -307,20 +292,18 @@ document.addEventListener('alpine:init', () => {
             const quality = this.qualities.find(q => q.itag === this.selectedQuality);
             if (!quality) return;
 
-            const currentTime = this.player.currentTime();
-            const wasPlaying = !this.player.paused();
+            const currentTime = this.player.currentTime;
+            const wasPlaying = !this.player.paused;
 
-            this.player.src({
-                src: quality.url,
-                type: quality.type || 'video/mp4'
-            });
+            this.player.src = quality.url;
+            this.player.load();
 
-            this.player.one('loadedmetadata', () => {
-                this.player.currentTime(currentTime);
+            this.player.addEventListener('loadedmetadata', () => {
+                this.player.currentTime = currentTime;
                 if (wasPlaying) {
-                    this.player.play();
+                    this.player.play().catch(() => {});
                 }
-            });
+            }, { once: true });
         },
 
         changeAudio() {
@@ -332,12 +315,12 @@ document.addEventListener('alpine:init', () => {
 
         changeSpeed() {
             if (this.player) {
-                this.player.playbackRate(parseFloat(this.playbackRate));
+                this.player.playbackRate = parseFloat(this.playbackRate);
             }
         },
 
         togglePip() {
-            const videoEl = this.player?.el()?.querySelector('video');
+            const videoEl = this.player;
             if (!videoEl) return;
 
             if (document.pictureInPictureElement) {
@@ -356,31 +339,31 @@ document.addEventListener('alpine:init', () => {
             switch (e.key.toLowerCase()) {
                 case ' ':
                     e.preventDefault();
-                    this.player.paused() ? this.player.play() : this.player.pause();
+                    this.player.paused ? this.player.play() : this.player.pause();
                     break;
                 case 'arrowleft':
                     e.preventDefault();
-                    this.player.currentTime(Math.max(0, this.player.currentTime() - 10));
+                    this.player.currentTime = Math.max(0, this.player.currentTime - 10);
                     break;
                 case 'arrowright':
                     e.preventDefault();
-                    this.player.currentTime(this.player.currentTime() + 10);
+                    this.player.currentTime += 10;
                     break;
                 case 'arrowup':
                     e.preventDefault();
-                    this.player.volume(Math.min(1, this.player.volume() + 0.1));
+                    this.player.volume = Math.min(1, this.player.volume + 0.1);
                     break;
                 case 'arrowdown':
                     e.preventDefault();
-                    this.player.volume(Math.max(0, this.player.volume() - 0.1));
+                    this.player.volume = Math.max(0, this.player.volume - 0.1);
                     break;
                 case 'f':
                     e.preventDefault();
-                    this.player.isFullscreen() ? this.player.exitFullscreen() : this.player.requestFullscreen();
+                    document.fullscreenElement ? document.exitFullscreen() : this.player.closest('video-player')?.requestFullscreen();
                     break;
                 case 'm':
                     e.preventDefault();
-                    this.player.muted(!this.player.muted());
+                    this.player.muted = !this.player.muted;
                     break;
             }
         }
